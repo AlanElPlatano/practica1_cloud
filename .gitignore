@@ -1,0 +1,12 @@
+# Credenciales y estado local: NUNCA deben llegar al repositorio.
+AWS.md
+infra/.state
+infra/*.pem
+infra/rds-create.log
+
+# Artefactos generados
+__pycache__/
+*.pyc
+samples/preview-*
+samples/thumb-*
+*.zip

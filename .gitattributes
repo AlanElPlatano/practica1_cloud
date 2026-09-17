@@ -1,0 +1,3 @@
+# Los scripts se ejecutan en Linux: deben conservar finales de linea LF.
+*.sh text eol=lf
+*.py text eol=lf
