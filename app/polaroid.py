@@ -7,6 +7,12 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 # Tamano al que se reduce la foto original antes de subirla a pictures/.
 THUMBNAIL_SIZE = (128, 128)
 
+# Tope de megapixeles aceptados. Una imagen se descomprime en memoria a
+# ancho*alto*canales bytes: 7000x7000 px en RGBA son ~200 MB, suficiente para
+# agotar la RAM de una t3.micro (1 GB) y tumbar el servicio. Con 30 MPx cabe
+# de sobra cualquier foto de celular y el proceso queda acotado.
+MAX_PIXELS = 30_000_000
+
 # Geometria de la polaroid: marco delgado arriba y a los lados, ancho abajo
 # para el mensaje, tal como una Polaroid real.
 PHOTO_SIZE = 600
@@ -45,7 +51,15 @@ def _load_font(size: int):
 
 def _open(raw: bytes) -> Image.Image:
     """Abre la imagen, corrige la rotacion segun EXIF y la pasa a RGB."""
+    # Image.open solo lee la cabecera, asi que el tamano se conoce antes de
+    # decodificar: se rechaza aqui, sin haber reservado la memoria.
     imagen = Image.open(io.BytesIO(raw))
+    ancho, alto = imagen.size
+    if ancho * alto > MAX_PIXELS:
+        raise ValueError(
+            f"La imagen es demasiado grande ({ancho}x{alto} px); "
+            f"el maximo es {MAX_PIXELS // 10**6} megapixeles"
+        )
     imagen = ImageOps.exif_transpose(imagen)
     return imagen.convert("RGB")
 

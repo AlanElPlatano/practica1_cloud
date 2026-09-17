@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polaroid Booth — Diagrama de arquitectura</title>
+<style>
+  :root {
+    --tinta:        #1e293b;
+    --tenue:        #64748b;
+    --linea:        #cbd5e1;
+    --fondo:        #f1f5f9;
+    --ec2:          #d97706;
+    --s3:           #059669;
+    --rds:          #2563eb;
+    --secreto:      #be123c;
+    --vpc:          #7c3aed;
+    /* Nota: el SVG repite estos colores en literal. var() no funciona en
+       atributos de presentacion como fill= o stroke=, solo en CSS. */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 20px 48px;
+    background: var(--fondo);
+    color: var(--tinta);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  .hoja {
+    max-width: 1280px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: 14px;
+    padding: 36px 40px 40px;
+    box-shadow: 0 1px 3px rgb(15 23 42 / 8%);
+  }
+  header { border-bottom: 2px solid var(--fondo); padding-bottom: 20px; margin-bottom: 28px; }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.02em; }
+  .sub { margin: 0; color: var(--tenue); font-size: 15px; }
+  svg { width: 100%; height: auto; display: block; }
+
+  .flujos {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px 28px;
+  }
+  .flujo { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.5; }
+  .num {
+    flex: 0 0 24px; height: 24px; border-radius: 50%;
+    background: var(--tinta); color: #fff;
+    font-size: 13px; font-weight: 600;
+    display: grid; place-items: center;
+  }
+  .flujo b { font-weight: 600; }
+  .flujo span { color: var(--tenue); }
+
+  .recursos {
+    margin-top: 32px; padding-top: 24px;
+    border-top: 2px solid var(--fondo);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px 28px;
+    font-size: 13.5px;
+  }
+  .recursos dt { color: var(--tenue); margin-bottom: 3px; }
+  .recursos dd { margin: 0; font-family: "Cascadia Mono", Consolas, monospace; font-size: 13px; }
+
+  @media (max-width: 720px) {
+    body { padding: 16px; }
+    .hoja { padding: 24px 20px 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="hoja">
+
+  <header>
+    <h1>Polaroid Booth — Arquitectura en AWS</h1>
+    <p class="sub">Backend de la estación de fotos para bodas y eventos sociales · región us-east-1</p>
+  </header>
+
+  <svg viewBox="0 0 1240 790" role="img"
+       aria-label="Diagrama: un cliente llama por HTTP a una instancia EC2 dentro de una VPC;
+                   la EC2 lee el secreto de Secrets Manager, guarda imágenes en S3 y consulta
+                   una base de datos RDS MySQL en subredes privadas.">
+    <defs>
+      <marker id="punta" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+      </marker>
+      <style>
+        .caja      { fill: #fff; stroke-width: 1.5; }
+        .titulo    { font: 600 15px "Segoe UI", sans-serif; }
+        .etiqueta  { font: 13px "Segoe UI", sans-serif; fill: #475569; }
+        .mono      { font: 12px Consolas, monospace; fill: #64748b; }
+        .zona      { font: 600 12.5px "Segoe UI", sans-serif; letter-spacing: .04em; }
+        .flecha    { stroke: #475569; stroke-width: 1.8; fill: none; marker-end: url(#punta); }
+        .txtflecha { font: 600 12.5px "Segoe UI", sans-serif; fill: #334155;
+             stroke: #fff; stroke-width: 3.5; paint-order: stroke; }
+        .badge     { font: 11.5px "Segoe UI", sans-serif; }
+      </style>
+    </defs>
+
+    <!-- ===== Nube de AWS ===== -->
+    <rect x="212" y="30" width="1010" height="730" rx="14"
+          fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="7 5"/>
+    <text x="232" y="56" class="zona" fill="#64748b">AWS CLOUD · us-east-1</text>
+
+    <!-- ===== VPC ===== -->
+    <rect x="240" y="76" width="590" height="660" rx="12"
+          fill="#faf8ff" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="260" y="101" class="zona" fill="#7c3aed">VPC POR DEFECTO · 172.31.0.0/16</text>
+
+    <!-- Subred pública -->
+    <rect x="264" y="118" width="542" height="268" rx="10"
+          fill="#fffbf5" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <text x="284" y="142" class="zona" fill="#b45309">SUBRED PÚBLICA</text>
+
+    <!-- EC2 -->
+    <rect x="288" y="156" width="494" height="208" rx="10" class="caja" stroke="#d97706"/>
+    <circle cx="322" cy="192" r="15" fill="#d97706"/>
+    <text x="322" y="197" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">EC2</text>
+    <text x="350" y="190" class="titulo" fill="#d97706">Instancia t3.micro · Amazon Linux 2023</text>
+    <text x="350" y="210" class="etiqueta">FastAPI + Uvicorn + Pillow (systemd, puerto 8000)</text>
+
+    <rect x="312" y="230" width="446" height="46" rx="7" fill="#fff7ed" stroke="#fdba74"/>
+    <text x="330" y="249" class="badge" font-weight="600" fill="#9a3412">Instance profile: LabInstanceProfile</text>
+    <text x="330" y="266" class="badge" fill="#c2410c">Credenciales temporales vía IMDSv2 — sin llaves en disco</text>
+
+    <rect x="312" y="288" width="446" height="26" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="330" y="305" class="mono">sg polaroid-booth-app-sg · 8000 abierto · 22 restringido</text>
+
+    <text x="330" y="338" class="etiqueta">
+      <tspan font-weight="600">/events</tspan> · <tspan font-weight="600">/upload</tspan> ·
+      <tspan font-weight="600">/events/{id}</tspan> · <tspan font-weight="600">/finish</tspan>
+    </text>
+
+    <!-- Subredes privadas -->
+    <rect x="264" y="418" width="542" height="288" rx="10"
+          fill="#f6f9ff" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <text x="284" y="442" class="zona" fill="#1d4ed8">SUBREDES PRIVADAS · SIN SALIDA A INTERNET</text>
+
+    <!-- RDS -->
+    <rect x="288" y="458" width="494" height="228" rx="10" class="caja" stroke="#2563eb"/>
+    <ellipse cx="322" cy="490" rx="15" ry="7" fill="#2563eb"/>
+    <path d="M307 490 v16 a15 7 0 0 0 30 0 v-16" fill="#2563eb" opacity=".75"/>
+    <text x="350" y="488" class="titulo" fill="#2563eb">RDS MySQL 8.0 · db.t3.micro</text>
+    <text x="350" y="508" class="etiqueta">polaroid-booth-db — no accesible desde internet</text>
+
+    <!-- tabla events -->
+    <rect x="312" y="528" width="210" height="102" rx="7" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="326" y="548" class="badge" font-weight="700" fill="#1e40af">events</text>
+    <text x="326" y="568" class="mono">event_id (PK)</text>
+    <text x="326" y="586" class="mono">client_name</text>
+    <text x="326" y="604" class="mono">event_type</text>
+    <text x="326" y="622" class="mono">event_date</text>
+
+    <!-- tabla photos -->
+    <rect x="548" y="528" width="210" height="102" rx="7" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="562" y="548" class="badge" font-weight="700" fill="#1e40af">photos</text>
+    <text x="562" y="568" class="mono">photo_id (PK)</text>
+    <text x="562" y="586" class="mono">event_id (FK)</text>
+    <text x="562" y="604" class="mono">message</text>
+    <text x="562" y="622" class="mono">original/polaroid_key</text>
+
+    <!-- relación 1..N -->
+    <path d="M522 579 H548" class="flecha"/>
+    <text x="535" y="571" text-anchor="middle" class="mono" fill="#1d4ed8">1..N</text>
+
+    <rect x="312" y="646" width="446" height="26" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+    <text x="330" y="663" class="mono">sg polaroid-booth-db-sg · 3306 solo desde app-sg</text>
+
+    <!-- ===== Cliente ===== -->
+    <rect x="24" y="200" width="158" height="120" rx="10" class="caja" stroke="#94a3b8"/>
+    <rect x="52" y="220" width="102" height="58" rx="5" fill="#f1f5f9" stroke="#94a3b8"/>
+    <rect x="86" y="282" width="34" height="6" rx="3" fill="#94a3b8"/>
+    <text x="103" y="308" text-anchor="middle" class="etiqueta" font-weight="600">Invitado</text>
+    <text x="103" y="344" text-anchor="middle" class="mono">curl · /docs</text>
+
+    <!-- ===== S3 ===== -->
+    <rect x="876" y="118" width="322" height="268" rx="10" class="caja" stroke="#059669"/>
+    <path d="M901 152 h28 v30 a14 7 0 0 1 -28 0 z" fill="#059669"/>
+    <ellipse cx="915" cy="152" rx="14" ry="7" fill="#059669" opacity=".7"/>
+    <text x="944" y="158" class="titulo" fill="#059669">Amazon S3</text>
+    <text x="900" y="188" class="mono">polaroid-booth-589775262868</text>
+    <text x="900" y="208" class="etiqueta">Block Public Access activado</text>
+
+    <rect x="900" y="226" width="274" height="60" rx="7" fill="#ecfdf5" stroke="#a7f3d0"/>
+    <text x="916" y="248" class="badge" font-weight="700" fill="#047857">pictures/</text>
+    <text x="916" y="268" class="mono">{event_id}/{uuid}.jpg — 128×128 px</text>
+
+    <rect x="900" y="298" width="274" height="60" rx="7" fill="#ecfdf5" stroke="#a7f3d0"/>
+    <text x="916" y="320" class="badge" font-weight="700" fill="#047857">polaroids/</text>
+    <text x="916" y="340" class="mono">{event_id}/{uuid}.jpg — 696×828 px</text>
+
+    <!-- ===== Secrets Manager ===== -->
+    <rect x="876" y="458" width="322" height="200" rx="10" class="caja" stroke="#be123c"/>
+    <rect x="903" y="492" width="24" height="18" rx="3" fill="#be123c"/>
+    <path d="M909 492 v-7 a6 6 0 0 1 12 0 v7" fill="none" stroke="#be123c" stroke-width="2.5"/>
+    <text x="944" y="507" class="titulo" fill="#be123c">Secrets Manager</text>
+    <text x="900" y="536" class="mono">polaroid-booth/rds</text>
+
+    <rect x="900" y="552" width="274" height="86" rx="7" fill="#fff1f2" stroke="#fecdd3"/>
+    <text x="916" y="574" class="mono" fill="#9f1239">host · port · dbname</text>
+    <text x="916" y="594" class="mono" fill="#9f1239">username · password</text>
+    <text x="916" y="620" class="badge" fill="#be123c">Leído en tiempo de ejecución</text>
+
+    <!-- ===== Flechas ===== -->
+    <!-- 1. cliente -> EC2 -->
+    <path d="M182 250 H288" class="flecha"/>
+    <circle cx="235" cy="228" r="12" fill="#1e293b"/>
+    <text x="235" y="232.5" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">1</text>
+    <text x="235" y="272" text-anchor="middle" class="txtflecha">HTTP :8000</text>
+
+    <!-- 2. EC2 -> Secrets Manager -->
+    <path d="M782 320 C 830 320, 836 520, 876 540" class="flecha"/>
+    <circle cx="838" cy="430" r="12" fill="#1e293b"/>
+    <text x="838" y="434.5" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">2</text>
+    <text x="854" y="404" class="txtflecha">GetSecretValue</text>
+
+    <!-- 3. EC2 -> S3 -->
+    <path d="M782 236 H876" class="flecha"/>
+    <circle cx="829" cy="214" r="12" fill="#1e293b"/>
+    <text x="829" y="218.5" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">3</text>
+    <text x="829" y="258" text-anchor="middle" class="txtflecha">Put / Get</text>
+
+    <!-- 4. EC2 -> RDS -->
+    <path d="M535 364 V458" class="flecha"/>
+    <circle cx="535" cy="411" r="12" fill="#1e293b"/>
+    <text x="535" y="415.5" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">4</text>
+    <text x="553" y="416" class="txtflecha">MySQL :3306</text>
+
+    <!-- 5. EC2 -> cliente (zip) -->
+    <path d="M288 300 H182" class="flecha"/>
+    <circle cx="235" cy="322" r="12" fill="#1e293b"/>
+    <text x="235" y="326.5" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">5</text>
+    <text x="235" y="360" text-anchor="middle" class="txtflecha">álbum .zip</text>
+  </svg>
+
+  <div class="flujos">
+    <div class="flujo"><div class="num">1</div><div>
+      <b>Petición del invitado.</b>
+      <span>La estación llama a los endpoints por HTTP contra el puerto 8000 de la EC2.</span>
+    </div></div>
+    <div class="flujo"><div class="num">2</div><div>
+      <b>Lectura del secreto.</b>
+      <span>La app pide las credenciales de RDS a Secrets Manager firmando con el rol
+      del instance profile. No hay contraseñas en el código ni en el entorno.</span>
+    </div></div>
+    <div class="flujo"><div class="num">3</div><div>
+      <b>Imágenes en S3.</b>
+      <span>En <code>/upload</code> se guarda la foto reducida en <code>pictures/</code>
+      y la polaroid compuesta en <code>polaroids/</code>, ambas con el mismo UUID.</span>
+    </div></div>
+    <div class="flujo"><div class="num">4</div><div>
+      <b>Registro en RDS.</b>
+      <span>Cada foto queda ligada a su evento por <code>event_id</code>. La base
+      solo acepta conexiones desde el security group de la aplicación.</span>
+    </div></div>
+    <div class="flujo"><div class="num">5</div><div>
+      <b>Cierre del evento.</b>
+      <span><code>/finish</code> consulta las polaroids del evento, las empaqueta en
+      un <code>.zip</code> descargable y borra de S3 las fotos originales.</span>
+    </div></div>
+  </div>
+
+  <dl class="recursos">
+    <div><dt>Instancia EC2</dt><dd>polaroid-booth-api · t3.micro</dd></div>
+    <div><dt>Base de datos</dt><dd>polaroid-booth-db · MySQL 8.0.46</dd></div>
+    <div><dt>Bucket</dt><dd>polaroid-booth-589775262868</dd></div>
+    <div><dt>Secreto</dt><dd>polaroid-booth/rds</dd></div>
+    <div><dt>Instance profile</dt><dd>LabInstanceProfile → LabRole</dd></div>
+    <div><dt>Región</dt><dd>us-east-1</dd></div>
+  </dl>
+
+</div>
+</body>
+</html>

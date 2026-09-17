@@ -26,18 +26,25 @@ echo "$EVENTO" | python -m json.tool
 EVENT_ID="$(echo "$EVENTO" | python -c 'import json,sys; print(json.load(sys.stdin)["event_id"])')"
 echo "EVENT_ID = $EVENT_ID"
 
-titulo "2. POST /upload  (3 fotos con mensaje)"
-MENSAJES=(
-  "Felicidades Ana y Luis, que sean muy felices!"
-  "Gracias por dejarnos ser parte de este dia tan especial"
-  "Por muchos anos mas juntos. Los queremos!"
+# Cada foto va con el mensaje que el invitado dejo para los festejados.
+FOTOS=(
+  "samples/babymetal-metal_forth.jpg"
+  "samples/tt.jpg"
+  "samples/TheStageA7X.jpg"
 )
-for i in 1 2 3; do
-  echo "--- foto${i}.jpg ---"
+MENSAJES=(
+  "album chido"
+  "teletubie"
+  "segundo album chido"
+)
+
+titulo "2. POST /upload  (${#FOTOS[@]} fotos con mensaje)"
+for i in "${!FOTOS[@]}"; do
+  echo "--- ${FOTOS[$i]} ---"
   curl -s -X POST "$API/upload" \
     -F "event_id=${EVENT_ID}" \
-    -F "message=${MENSAJES[$((i-1))]}" \
-    -F "photo=@samples/foto${i}.jpg" | python -m json.tool
+    -F "message=${MENSAJES[$i]}" \
+    -F "photo=@${FOTOS[$i]}" | python -m json.tool
 done
 
 titulo "3. GET /events/{event_id}"
