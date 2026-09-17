@@ -10,3 +10,7 @@ __pycache__/
 samples/preview-*
 samples/thumb-*
 *.zip
+
+# El user-data renderizado queda como evidencia de lo que recibio la instancia.
+infra/.user-data.rendered
+album/

@@ -24,7 +24,9 @@ SCHEMA = [
         message      VARCHAR(255) NOT NULL,
         original_key VARCHAR(255) NULL,
         polaroid_key VARCHAR(255) NOT NULL,
-        created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        -- Precision de microsegundos: varias subidas caen en el mismo
+        -- segundo y el album debe conservar el orden real de llegada.
+        created_at   TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
         CONSTRAINT fk_photos_event FOREIGN KEY (event_id)
             REFERENCES events (event_id) ON DELETE CASCADE,
         INDEX idx_photos_event (event_id)

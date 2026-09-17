@@ -9,17 +9,28 @@ ROOT="$(dirname "$HERE")"
 bash "$HERE/package.sh"
 
 # --- 2. Resolver la AMI mas reciente de Amazon Linux 2023 ---
+# El parametro publico de SSM es la via corta, pero el Learner Lab no siempre
+# permite ssm:GetParameter; en ese caso se busca la AMI en el catalogo de EC2.
 AMI_ID="$(aws ssm get-parameter \
   --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 \
-  --query Parameter.Value --output text)"
+  --query Parameter.Value --output text 2>/dev/null || true)"
+if [ -z "$AMI_ID" ] || [ "$AMI_ID" = "None" ]; then
+  AMI_ID="$(aws ec2 describe-images --owners amazon \
+    --filters "Name=name,Values=al2023-ami-2023.*-kernel-6.1-x86_64" \
+              "Name=state,Values=available" \
+    --query 'sort_by(Images,&CreationDate)[-1].ImageId' --output text)"
+fi
 echo ">> AMI: ${AMI_ID}"
 
 # --- 3. Renderizar el user-data con los valores reales ---
-USER_DATA="$(mktemp)"
+# Se escribe junto al proyecto y se referencia con ruta relativa: en Git Bash
+# un file:// con ruta tipo /tmp lo mal traduce el AWS CLI nativo de Windows.
+cd "$ROOT"
+USER_DATA="infra/.user-data.rendered"
 sed -e "s|__BUCKET__|${BUCKET}|g" \
     -e "s|__SECRET_NAME__|${SECRET_NAME}|g" \
     -e "s|__REGION__|${AWS_DEFAULT_REGION}|g" \
-    "$HERE/user-data.sh" > "$USER_DATA"
+    "infra/user-data.sh" > "$USER_DATA"
 
 # --- 4. Lanzar la instancia ---
 SUBNET_ID="$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$VPC_ID" \
@@ -36,7 +47,6 @@ INSTANCE_ID="$(aws ec2 run-instances \
   --user-data "file://${USER_DATA}" \
   --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=${EC2_NAME}},{Key=Project,Value=${PROJECT}}]" \
   --query 'Instances[0].InstanceId' --output text)"
-rm -f "$USER_DATA"
 
 save_state INSTANCE_ID "$INSTANCE_ID"
 echo ">> Instancia lanzada: ${INSTANCE_ID}"

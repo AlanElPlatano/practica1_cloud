@@ -169,7 +169,7 @@ def list_photos(event_id: str):
         _get_event(cur, event_id)
         cur.execute(
             "SELECT photo_id, message, original_key, polaroid_key, created_at "
-            "FROM photos WHERE event_id = %s ORDER BY created_at",
+            "FROM photos WHERE event_id = %s ORDER BY created_at, photo_id",
             (event_id,),
         )
         fotos = cur.fetchall()
@@ -203,7 +203,7 @@ def finish_event(payload: EventRef):
         evento = _get_event(cur, event_id)
         cur.execute(
             "SELECT photo_id, message, original_key, polaroid_key "
-            "FROM photos WHERE event_id = %s ORDER BY created_at",
+            "FROM photos WHERE event_id = %s ORDER BY created_at, photo_id",
             (event_id,),
         )
         fotos = cur.fetchall()

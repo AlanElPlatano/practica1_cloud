@@ -82,7 +82,10 @@ infra/                Aprovisionamiento (Bash + AWS CLI)
   user-data.sh        Bootstrap de la instancia (venv + systemd)
   package.sh          Empaqueta app/ y lo publica en S3
   deploy.sh           Redespliegue rápido sin recrear la instancia
+  verify.sh           Evidencia de toda la arquitectura en una sola salida
+  db-inspect.sh       Muestra las tablas de RDS (por SSH, vía el secreto)
 
+demo.sh               Recorrido completo de la API
 teardown.sh           Elimina todos los recursos
 samples/              Fotos de prueba para la demostración
 ```
@@ -198,6 +201,32 @@ El zip incluye las polaroids numeradas y un `album.txt` con los mensajes.
 
 - `GET /health` — verifica el acceso al secreto y a RDS.
 - `GET /events/{event_id}/photos` — listado con URLs prefirmadas.
+
+---
+
+## Demostración completa
+
+`demo.sh` recorre los cuatro endpoints de principio a fin: crea el evento, sube
+las tres fotos de `samples/` con su mensaje, consulta la metadata y descarga el
+álbum en `./album/`.
+
+```bash
+./demo.sh                        # usa la IP guardada en infra/.state
+./demo.sh http://<IP>:8000       # o una URL explícita
+```
+
+Dos scripts reúnen la evidencia de que todo corre en la nube:
+
+```bash
+bash infra/verify.sh      # EC2 + instance profile, RDS, secreto, S3, security groups
+bash infra/db-inspect.sh  # tablas, llave foránea y conteo de fotos por evento
+```
+
+`verify.sh` entra además a la instancia y muestra que la aplicación firma sus
+llamadas como `assumed-role/LabRole/<instance-id>` —es decir, con el rol que
+entrega `LabInstanceProfile`—, que no existe ningún `~/.aws` y que las únicas
+variables de ambiente del servicio son la región, el nombre del secreto y el
+nombre del bucket. La contraseña de RDS nunca aparece.
 
 ---
 
