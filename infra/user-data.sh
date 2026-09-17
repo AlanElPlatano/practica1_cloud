@@ -31,7 +31,7 @@ chown -R ec2-user:ec2-user "$APP_DIR"
 # La contrasena de RDS jamas se escribe aqui.
 cat > /etc/systemd/system/polaroid-booth.service <<UNIT
 [Unit]
-Description=Polaroid Booth API
+Description=InstaBox API
 After=network-online.target
 Wants=network-online.target
 

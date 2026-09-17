@@ -1,6 +1,6 @@
 # Descripción del proyecto
 
-**Polaroid Booth** es el backend de una estación de fotos para bodas y eventos
+**InstaBox** es el backend de una estación de fotos para bodas y eventos
 sociales. Durante la fiesta, los invitados suben una fotografía acompañada de un
 mensaje para los festejados; al terminar, el fotógrafo descarga un álbum de
 polaroids listo para imprimir. Como un mismo fotógrafo atiende varios eventos a

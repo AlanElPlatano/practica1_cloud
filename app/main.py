@@ -1,4 +1,4 @@
-"""API del Polaroid Booth.
+"""API del InstaBox.
 
 Flujo: se crea un evento, los invitados suben fotos con un mensaje, y al
 terminar se descarga un zip con las polaroids listas para imprimir.
@@ -37,7 +37,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Polaroid Booth API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="InstaBox API", version="1.0.0", lifespan=lifespan)
 
 
 class EventIn(BaseModel):

@@ -1,4 +1,4 @@
-# Polaroid Booth — backend en AWS
+# InstaBox — backend en AWS
 
 Backend para la estación de fotos de un fotógrafo de bodas y eventos sociales.
 Los invitados suben una foto con un mensaje para los festejados; el servicio

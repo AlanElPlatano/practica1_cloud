@@ -30,8 +30,8 @@ create_sg() {  # nombre, descripcion -> imprime el group id
   echo "$id"
 }
 
-APP_SG_ID="$(create_sg "$APP_SG_NAME" "Backend Polaroid Booth (HTTP + SSH)")"
-DB_SG_ID="$(create_sg "$DB_SG_NAME" "RDS MySQL Polaroid Booth")"
+APP_SG_ID="$(create_sg "$APP_SG_NAME" "Backend InstaBox (HTTP + SSH)")"
+DB_SG_ID="$(create_sg "$DB_SG_NAME" "RDS MySQL InstaBox")"
 save_state APP_SG_ID "$APP_SG_ID"
 save_state DB_SG_ID "$DB_SG_ID"
 echo ">> app-sg: ${APP_SG_ID}   db-sg: ${DB_SG_ID}"
