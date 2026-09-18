@@ -82,21 +82,10 @@ echo "=============== 6/6  Key pair ==============="
 aws ec2 delete-key-pair --key-name "$KEY_NAME" >/dev/null 2>&1 \
   && echo "Key pair ${KEY_NAME} eliminado." || echo "El key pair no existe."
 rm -f "$(dirname "${BASH_SOURCE[0]}")/infra/${KEY_NAME}.pem"
-rm -f "$STATE_FILE"
 
 echo
-echo "=============== VERIFICACION ==============="
-echo "-- Instancias EC2 del proyecto (se espera vacio o 'terminated'):"
-aws ec2 describe-instances --filters "Name=tag:Project,Values=${PROJECT}" \
-  --query 'Reservations[].Instances[].[InstanceId,State.Name]' --output text || true
-echo "-- Instancias RDS (se espera vacio):"
-aws rds describe-db-instances --query "DBInstances[?DBInstanceIdentifier=='${DB_IDENTIFIER}'].DBInstanceIdentifier" --output text || true
-echo "-- Buckets S3 (se espera vacio):"
-aws s3 ls | grep "$PROJECT" || echo "(ninguno)"
-echo "-- Secretos (se espera vacio):"
-aws secretsmanager list-secrets --query "SecretList[?Name=='${SECRET_NAME}'].Name" --output text || true
-echo "-- Security groups (se espera vacio):"
-aws ec2 describe-security-groups --filters "Name=group-name,Values=${PROJECT}-*" \
-  --query 'SecurityGroups[].GroupName' --output text || true
+bash "$(dirname "${BASH_SOURCE[0]}")/infra/verify-teardown.sh"
+
+rm -f "$STATE_FILE"
 echo
 echo "Limpieza terminada."

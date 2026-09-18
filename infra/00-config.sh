@@ -8,7 +8,17 @@ export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 export PROJECT="instabox"
 
 # --- Identificadores de recursos ---
-export ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+# Toda llamada a AWS necesita credenciales vigentes, y las del Learner Lab
+# caducan al terminar la sesion. Se comprueba aqui, con un mensaje claro, en vez
+# de dejar que 'set -e' aborte sin decir por que.
+if ! ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text 2>/dev/null)"; then
+  echo "ERROR: las credenciales de AWS no son validas o caducaron." >&2
+  echo "       Copia el bloque nuevo del Learner Lab a ~/.aws/credentials" >&2
+  echo "       y vuelve a intentarlo." >&2
+  echo "       No se ha creado ni eliminado ningun recurso." >&2
+  exit 1
+fi
+export ACCOUNT_ID
 export BUCKET="${PROJECT}-${ACCOUNT_ID}"
 export DB_IDENTIFIER="${PROJECT}-db"
 export DB_NAME="instabox"
