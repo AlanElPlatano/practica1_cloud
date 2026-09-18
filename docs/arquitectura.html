@@ -174,7 +174,7 @@
       <text x="330" y="266" class="badge" fill="#c2410c">Credenciales temporales vía IMDSv2 — sin llaves en disco</text>
 
       <rect x="312" y="288" width="446" height="26" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
-      <text x="330" y="305" class="mono">sg polaroid-booth-app-sg · 8000 abierto · 22 restringido</text>
+      <text x="330" y="305" class="mono">sg instabox-app-sg · 8000 abierto · 22 restringido</text>
 
       <text x="330" y="338" class="etiqueta">
         <tspan font-weight="600">/events</tspan> · <tspan font-weight="600">/upload</tspan> ·
@@ -191,7 +191,7 @@
       <ellipse cx="322" cy="490" rx="15" ry="7" fill="#2563eb"/>
       <path d="M307 490 v16 a15 7 0 0 0 30 0 v-16" fill="#2563eb" opacity=".75"/>
       <text x="350" y="488" class="titulo" fill="#2563eb">RDS MySQL 8.0 · db.t3.micro</text>
-      <text x="350" y="508" class="etiqueta">polaroid-booth-db — no accesible desde internet</text>
+      <text x="350" y="508" class="etiqueta">instabox-db — no accesible desde internet</text>
 
       <!-- tabla events -->
       <rect x="312" y="528" width="210" height="102" rx="7" fill="#eff6ff" stroke="#bfdbfe"/>
@@ -214,7 +214,7 @@
       <text x="535" y="571" text-anchor="middle" class="mono" fill="#1d4ed8">1..N</text>
 
       <rect x="312" y="646" width="446" height="26" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
-      <text x="330" y="663" class="mono">sg polaroid-booth-db-sg · 3306 solo desde app-sg</text>
+      <text x="330" y="663" class="mono">sg instabox-db-sg · 3306 solo desde app-sg</text>
 
       <!-- ===== Cliente ===== -->
       <rect x="24" y="200" width="158" height="120" rx="10" class="caja" stroke="#94a3b8"/>
@@ -228,7 +228,9 @@
       <path d="M901 152 h28 v30 a14 7 0 0 1 -28 0 z" fill="#059669"/>
       <ellipse cx="915" cy="152" rx="14" ry="7" fill="#059669" opacity=".7"/>
       <text x="944" y="158" class="titulo" fill="#059669">Amazon S3</text>
-      <text x="900" y="188" class="mono">polaroid-booth-589775262868</text>
+      <!-- El nombre del bucket va a la derecha del icono (x 901-929, y 145-189),
+           no debajo: a y=188 el icono lo tapaba. -->
+      <text x="944" y="178" class="mono">instabox-589775262868</text>
       <text x="900" y="208" class="etiqueta">Block Public Access activado</text>
 
       <rect x="900" y="226" width="274" height="60" rx="7" fill="#ecfdf5" stroke="#a7f3d0"/>
@@ -244,7 +246,7 @@
       <rect x="903" y="492" width="24" height="18" rx="3" fill="#be123c"/>
       <path d="M909 492 v-7 a6 6 0 0 1 12 0 v7" fill="none" stroke="#be123c" stroke-width="2.5"/>
       <text x="944" y="507" class="titulo" fill="#be123c">Secrets Manager</text>
-      <text x="900" y="536" class="mono">polaroid-booth/rds</text>
+      <text x="900" y="536" class="mono">instabox/rds</text>
 
       <rect x="900" y="552" width="274" height="86" rx="7" fill="#fff1f2" stroke="#fecdd3"/>
       <text x="916" y="574" class="mono" fill="#9f1239">host · port · dbname</text>
@@ -311,10 +313,10 @@
 
     <h2 class="sep">Recursos desplegados</h2>
     <dl class="recursos">
-        <div><dt>Instancia EC2</dt><dd>polaroid-booth-api · t3.micro</dd></div>
-        <div><dt>Base de datos</dt><dd>polaroid-booth-db · MySQL 8.0.46</dd></div>
-        <div><dt>Bucket S3</dt><dd>polaroid-booth-589775262868</dd></div>
-        <div><dt>Secreto</dt><dd>polaroid-booth/rds</dd></div>
+        <div><dt>Instancia EC2</dt><dd>instabox-api · t3.micro</dd></div>
+        <div><dt>Base de datos</dt><dd>instabox-db · MySQL 8.0.46</dd></div>
+        <div><dt>Bucket S3</dt><dd>instabox-589775262868</dd></div>
+        <div><dt>Secreto</dt><dd>instabox/rds</dd></div>
         <div><dt>Instance profile</dt><dd>LabInstanceProfile → LabRole</dd></div>
         <div><dt>Región</dt><dd>us-east-1</dd></div>
     </dl>

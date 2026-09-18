@@ -40,14 +40,14 @@ asociada a su `event_id` en la base de datos.
 ```
 
 **Cómo se conecta todo.** La EC2 no lleva ninguna credencial escrita. Al
-arrancar, la app pide a Secrets Manager el secreto `polaroid-booth/rds` usando
+arrancar, la app pide a Secrets Manager el secreto `instabox/rds` usando
 las credenciales temporales que el **instance profile `LabInstanceProfile`**
 entrega a través del metadata service, y con esas credenciales abre la conexión
 a RDS. El mismo instance profile firma las llamadas a S3.
 
 RDS vive en subredes privadas de la VPC por defecto y **no es accesible desde
-internet**: su security group (`polaroid-booth-db-sg`) solo acepta el puerto
-3306 con origen en el security group de la aplicación (`polaroid-booth-app-sg`).
+internet**: su security group (`instabox-db-sg`) solo acepta el puerto
+3306 con origen en el security group de la aplicación (`instabox-app-sg`).
 El bucket de S3 tiene *Block Public Access* activado; las imágenes se comparten
 mediante URLs prefirmadas que caducan en una hora.
 
@@ -134,12 +134,17 @@ reinicia el servicio sin recrear la instancia.
 
 Todos los ejemplos usan `API=http://<IP>:8000`.
 
+Los cuatro endpoints reciben los datos como formulario (`multipart/form-data`)
+en lugar de JSON. Así la documentación interactiva de `/docs` muestra un campo
+de texto por dato, en vez de un único cuadro con JSON crudo.
+
 ### `POST /events` — crea un evento
 
 ```bash
 curl -s -X POST $API/events \
-  -H 'Content-Type: application/json' \
-  -d '{"client_name":"Ana y Luis","event_type":"boda","event_date":"2026-09-20"}'
+  -F "client_name=Ana y Luis" \
+  -F "event_type=boda" \
+  -F "event_date=2026-09-20"
 ```
 
 ```json
@@ -153,14 +158,14 @@ curl -s -X POST $API/events \
 
 ### `POST /upload` — sube una foto con mensaje
 
-Recibe `multipart/form-data`. Sube la foto reducida a `pictures/`, genera y
-sube la polaroid a `polaroids/`, y guarda la metadata en RDS.
+Sube la foto reducida a `pictures/`, genera y sube la polaroid a `polaroids/`,
+y guarda la metadata en RDS, todo en la misma llamada.
 
 ```bash
 curl -s -X POST $API/upload \
   -F "event_id=$EVENT_ID" \
-  -F "message=Felicidades Ana y Luis!" \
-  -F "photo=@samples/foto1.jpg"
+  -F "message=album chido" \
+  -F "photo=@samples/babymetal-metal_forth.jpg"
 ```
 
 Devuelve el `photo_id`, las dos rutas en S3 y una URL prefirmada para ver la
@@ -190,8 +195,7 @@ de S3 las fotos originales.
 
 ```bash
 curl -s -X POST $API/finish \
-  -H 'Content-Type: application/json' \
-  -d "{\"event_id\":\"$EVENT_ID\"}" \
+  -F "event_id=$EVENT_ID" \
   -o album.zip
 ```
 
@@ -234,18 +238,18 @@ nombre del bucket. La contraseña de RDS nunca aparece.
 
 | Recurso | Dónde mirar |
 |---|---|
-| Bucket y objetos | S3 → `polaroid-booth-<ACCOUNT_ID>` → `pictures/`, `polaroids/` |
-| Base de datos | RDS → Databases → `polaroid-booth-db` |
-| Secreto | Secrets Manager → `polaroid-booth/rds` → *Retrieve secret value* |
-| Instancia y su rol | EC2 → Instances → `polaroid-booth-api` → pestaña *Security* → **IAM Role: LabInstanceProfile** |
+| Bucket y objetos | S3 → `instabox-<ACCOUNT_ID>` → `pictures/`, `polaroids/` |
+| Base de datos | RDS → Databases → `instabox-db` |
+| Secreto | Secrets Manager → `instabox/rds` → *Retrieve secret value* |
+| Instancia y su rol | EC2 → Instances → `instabox-api` → pestaña *Security* → **IAM Role: LabInstanceProfile** |
 
 Para ver las tablas directamente, desde la EC2 (RDS no es accesible desde fuera
 de la VPC):
 
 ```bash
-ssh -i infra/polaroid-booth-key.pem ec2-user@<IP>
+ssh -i infra/instabox-key.pem ec2-user@<IP>
 # el host de RDS se obtiene del propio secreto
-mysql -h <endpoint-rds> -u polaroid_admin -p polaroid -e "
+mysql -h <endpoint-rds> -u instabox_admin -p instabox -e "
   SELECT e.client_name, e.event_type, COUNT(p.photo_id) AS fotos
   FROM events e LEFT JOIN photos p ON p.event_id = e.event_id
   GROUP BY e.event_id;"

@@ -50,9 +50,9 @@ echo "-- Identidad con la que la app firma sus llamadas a AWS:"
 aws sts get-caller-identity --output table
 echo "-- No hay credenciales en disco ni en el entorno del servicio:"
 ls -la ~/.aws 2>/dev/null || echo "   (no existe ~/.aws)"
-sudo systemctl show polaroid-booth -p Environment
+sudo systemctl show instabox -p Environment
 echo "-- Estado del servicio:"
-systemctl is-active polaroid-booth
+systemctl is-active instabox
 REMOTE
 fi
 

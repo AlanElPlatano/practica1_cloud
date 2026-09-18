@@ -12,7 +12,6 @@ from contextlib import asynccontextmanager
 from datetime import date
 
 from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
-from pydantic import BaseModel, Field
 
 import db
 import polaroid
@@ -20,7 +19,7 @@ import storage
 from config import PICTURES_PREFIX, POLAROIDS_PREFIX, S3_BUCKET
 
 logging.basicConfig(level=logging.INFO)
-log = logging.getLogger("polaroid-booth")
+log = logging.getLogger("instabox")
 
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
 
@@ -40,14 +39,9 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="InstaBox API", version="1.0.0", lifespan=lifespan)
 
 
-class EventIn(BaseModel):
-    client_name: str = Field(min_length=1, max_length=120)
-    event_type: str = Field(min_length=1, max_length=60)
-    event_date: date
-
-
-class EventRef(BaseModel):
-    event_id: str
+# Todos los endpoints reciben los datos como formulario y no como JSON: asi la
+# documentacion interactiva de /docs presenta un campo por dato en vez de un
+# unico cuadro de texto con JSON crudo, que es mas comodo de usar y de mostrar.
 
 
 def _get_event(cur, event_id: str) -> dict:
@@ -72,21 +66,27 @@ def health():
 
 
 @app.post("/events", status_code=201)
-def create_event(payload: EventIn):
+def create_event(
+    client_name: str = Form(..., min_length=1, max_length=120,
+                            description="Nombre del cliente o de los festejados"),
+    event_type: str = Form(..., min_length=1, max_length=60,
+                           description="Tipo de evento: boda, xv, graduacion..."),
+    event_date: date = Form(..., description="Fecha del evento en formato AAAA-MM-DD"),
+):
     """Registra un evento nuevo en RDS y devuelve su event_id."""
     event_id = str(uuid.uuid4())
     with db.connection() as conn, conn.cursor() as cur:
         cur.execute(
             "INSERT INTO events (event_id, client_name, event_type, event_date) "
             "VALUES (%s, %s, %s, %s)",
-            (event_id, payload.client_name, payload.event_type, payload.event_date),
+            (event_id, client_name, event_type, event_date),
         )
     log.info("Evento creado: %s", event_id)
     return {
         "event_id": event_id,
-        "client_name": payload.client_name,
-        "event_type": payload.event_type,
-        "event_date": payload.event_date.isoformat(),
+        "client_name": client_name,
+        "event_type": event_type,
+        "event_date": event_date.isoformat(),
     }
 
 
@@ -192,13 +192,14 @@ def _slug(texto: str, limite: int = 40) -> str:
 
 
 @app.post("/finish")
-def finish_event(payload: EventRef):
+def finish_event(
+    event_id: str = Form(..., description="UUID del evento que se va a cerrar"),
+):
     """Empaqueta las polaroids del evento en un zip descargable.
 
     Cierra el evento: una vez generado el album, las fotos originales
     reducidas se eliminan de S3, como indica el flujo del servicio.
     """
-    event_id = payload.event_id
     with db.connection() as conn, conn.cursor() as cur:
         evento = _get_event(cur, event_id)
         cur.execute(

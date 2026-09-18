@@ -4,7 +4,7 @@
 set -xo pipefail
 exec > >(tee /var/log/polaroid-bootstrap.log) 2>&1
 
-APP_DIR=/opt/polaroid-booth
+APP_DIR=/opt/instabox
 
 # mariadb105 trae el cliente mysql, util para inspeccionar las tablas por SSH.
 # Las fuentes dejavu son las que usa Pillow para escribir el mensaje.
@@ -29,7 +29,7 @@ chown -R ec2-user:ec2-user "$APP_DIR"
 
 # Solo configuracion no sensible: el nombre del secreto y el bucket.
 # La contrasena de RDS jamas se escribe aqui.
-cat > /etc/systemd/system/polaroid-booth.service <<UNIT
+cat > /etc/systemd/system/instabox.service <<UNIT
 [Unit]
 Description=InstaBox API
 After=network-online.target
@@ -51,5 +51,5 @@ WantedBy=multi-user.target
 UNIT
 
 systemctl daemon-reload
-systemctl enable --now polaroid-booth.service
+systemctl enable --now instabox.service
 echo "BOOTSTRAP COMPLETADO"

@@ -47,7 +47,7 @@ aws rds delete-db-subnet-group --db-subnet-group-name "$DB_SUBNET_GROUP" 2>/dev/
 
 echo
 echo "=============== 3/6  S3 ==============="
-if aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
+if aws s3api head-bucket --bucket "$BUCKET" >/dev/null 2>&1; then
   aws s3 rm "s3://${BUCKET}" --recursive >/dev/null
   aws s3api delete-bucket --bucket "$BUCKET"
   echo "Bucket ${BUCKET} vaciado y eliminado."
@@ -68,7 +68,7 @@ echo "=============== 5/6  Security groups ==============="
 for sg in "${DB_SG_ID:-}" "${APP_SG_ID:-}"; do
   [ -n "$sg" ] || continue
   for intento in 1 2 3 4 5; do
-    if aws ec2 delete-security-group --group-id "$sg" 2>/dev/null; then
+    if aws ec2 delete-security-group --group-id "$sg" >/dev/null 2>&1; then
       echo "Security group ${sg} eliminado."
       break
     fi
@@ -79,7 +79,7 @@ done
 
 echo
 echo "=============== 6/6  Key pair ==============="
-aws ec2 delete-key-pair --key-name "$KEY_NAME" 2>/dev/null \
+aws ec2 delete-key-pair --key-name "$KEY_NAME" >/dev/null 2>&1 \
   && echo "Key pair ${KEY_NAME} eliminado." || echo "El key pair no existe."
 rm -f "$(dirname "${BASH_SOURCE[0]}")/infra/${KEY_NAME}.pem"
 rm -f "$STATE_FILE"

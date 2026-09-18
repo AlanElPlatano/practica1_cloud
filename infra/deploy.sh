@@ -15,12 +15,12 @@ SSH_OPTS=(-i "$HERE/${KEY_NAME}.pem" -o StrictHostKeyChecking=no -o UserKnownHos
 ssh "${SSH_OPTS[@]}" "ec2-user@${PUBLIC_IP}" bash -s <<REMOTE
 set -euxo pipefail
 sudo aws s3 cp "s3://${BUCKET}/deploy/app.zip" /tmp/app.zip --region ${AWS_DEFAULT_REGION}
-sudo unzip -o /tmp/app.zip -d /opt/polaroid-booth
-sudo chown -R ec2-user:ec2-user /opt/polaroid-booth
-sudo /opt/polaroid-booth/venv/bin/pip install -q -r /opt/polaroid-booth/app/requirements.txt
-sudo systemctl restart polaroid-booth
+sudo unzip -o /tmp/app.zip -d /opt/instabox
+sudo chown -R ec2-user:ec2-user /opt/instabox
+sudo /opt/instabox/venv/bin/pip install -q -r /opt/instabox/app/requirements.txt
+sudo systemctl restart instabox
 sleep 3
-systemctl is-active polaroid-booth
+systemctl is-active instabox
 REMOTE
 
 echo ">> Redespliegue completo: http://${PUBLIC_IP}:8000/docs"

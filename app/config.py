@@ -12,7 +12,7 @@ import boto3
 
 # Configuracion no sensible: solo el *nombre* del secreto y el bucket.
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
-SECRET_NAME = os.environ.get("SECRET_NAME", "polaroid-booth/rds")
+SECRET_NAME = os.environ.get("SECRET_NAME", "instabox/rds")
 S3_BUCKET = os.environ.get("S3_BUCKET", "")
 
 # Prefijos dentro del bucket.

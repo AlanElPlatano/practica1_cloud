@@ -5,14 +5,14 @@ set -euo pipefail
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 
 # Prefijo usado para nombrar todos los recursos creados por este proyecto.
-export PROJECT="polaroid-booth"
+export PROJECT="instabox"
 
 # --- Identificadores de recursos ---
 export ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 export BUCKET="${PROJECT}-${ACCOUNT_ID}"
 export DB_IDENTIFIER="${PROJECT}-db"
-export DB_NAME="polaroid"
-export DB_USER="polaroid_admin"
+export DB_NAME="instabox"
+export DB_USER="instabox_admin"
 export SECRET_NAME="${PROJECT}/rds"
 export APP_SG_NAME="${PROJECT}-app-sg"
 export DB_SG_NAME="${PROJECT}-db-sg"

@@ -33,8 +33,9 @@ curl -s "$API/health"; echo
 
 titulo "1. POST /events"
 EVENTO="$(curl -s -X POST "$API/events" \
-  -H 'Content-Type: application/json' \
-  -d '{"client_name":"Ana y Luis","event_type":"boda","event_date":"2026-09-20"}')"
+  -F "client_name=Ana y Luis" \
+  -F "event_type=boda" \
+  -F "event_date=2026-09-20")"
 echo "$EVENTO" | python -m json.tool
 EVENT_ID="$(echo "$EVENTO" | python -c 'import json,sys; print(json.load(sys.stdin)["event_id"])')"
 echo "EVENT_ID = $EVENT_ID"
@@ -67,16 +68,14 @@ if [ "$SIN_FINISH" = 1 ]; then
   echo
   echo "Evento abierto, sin cerrar. Las fotos originales siguen en pictures/."
   echo "Para cerrarlo y descargar el album:"
-  echo "  curl -s -X POST $API/finish -H 'Content-Type: application/json' \\"
-  echo "    -d '{\"event_id\":\"$EVENT_ID\"}' -o album.zip"
+  echo "  curl -s -X POST $API/finish -F \"event_id=$EVENT_ID\" -o album.zip"
   exit 0
 fi
 
 titulo "4. POST /finish  (descarga del album)"
 rm -rf album album.zip
 curl -s -X POST "$API/finish" \
-  -H 'Content-Type: application/json' \
-  -d "{\"event_id\":\"$EVENT_ID\"}" \
+  -F "event_id=${EVENT_ID}" \
   -o album.zip
 python -c "
 import zipfile
